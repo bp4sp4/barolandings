@@ -6,6 +6,20 @@ interface ConsultationEmailData {
   click_source?: string | null;
 }
 
+// 한국 시간대(KST, UTC+9)로 날짜/시간 포맷팅
+function formatKoreanTime(date: Date = new Date()): string {
+  return date.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
 // Brevo SMTP Transporter 생성
 function createTransporter() {
   const smtpLogin = process.env.BREVO_SMTP_LOGIN;
@@ -153,9 +167,7 @@ export async function sendConsultationEmail(data: ConsultationEmailData) {
               </tr>
               <tr style="border-top: 1px solid #ebedf0;">
                 <td style="padding-top: 20px; font-size: 14px; color: #8b95a1;">신청 시각</td>
-                <td style="padding-top: 20px; font-size: 14px; color: #8b95a1; text-align: right;">${new Date().toLocaleString(
-                  "ko-KR"
-                )}</td>
+                <td style="padding-top: 20px; font-size: 14px; color: #8b95a1; text-align: right;">${formatKoreanTime()}</td>
               </tr>
             </table>
           </div>
@@ -184,7 +196,7 @@ export async function sendConsultationEmail(data: ConsultationEmailData) {
 이름(회사명): ${data.name}
 연락처: ${data.contact}
 유입 경로: ${data.click_source || "바로기업 홈페이지"}
-신청 시간: ${new Date().toLocaleString("ko-KR")}
+신청 시간: ${formatKoreanTime()}
     `;
 
     // 이메일 전송
