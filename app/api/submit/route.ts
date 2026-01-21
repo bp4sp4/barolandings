@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendConsultationEmail } from "@/lib/email";
+import { sendSlackNotification } from "@/lib/slack";
 
 // Node.js 런타임을 명시적으로 설정
 export const runtime = "nodejs";
@@ -113,7 +114,7 @@ export async function POST(request: NextRequest) {
 
     console.log("Data inserted successfully:", data);
 
-    // 이메일 알림 전송 (비동기, 실패해도 상담 신청은 성공 처리)
+    // 이메일/슬랙 알림 전송 (비동기, 실패해도 상담 신청은 성공 처리)
     console.log("[EMAIL] 이메일 전송 시도 시작");
     console.log("[EMAIL] 환경 변수 확인:");
     console.log(
@@ -187,6 +188,20 @@ export async function POST(request: NextRequest) {
       console.warn(
         "[EMAIL] 필요한 환경 변수: BREVO_SMTP_LOGIN, BREVO_SMTP_KEY"
       );
+    }
+
+    console.log("=== Request processed successfully ===");
+    // 슬랙 알림 (이메일 성공/실패와 무관하게 시도)
+    try {
+      const message = [
+        "*새 상담 신청 접수*",
+        `• 이름/기업: ${name}`,
+        `• 연락처: ${contact}`,
+        `• 유입 경로: ${clickSource || "미입력"}`,
+      ].join("\n");
+      await sendSlackNotification({ text: message });
+    } catch (slackError) {
+      console.error("[SLACK] 알림 전송 실패:", slackError);
     }
 
     console.log("=== Request processed successfully ===");
